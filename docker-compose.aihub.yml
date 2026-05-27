@@ -1,0 +1,47 @@
+# AIHub — AI Provider Node deployment
+#
+# วิธีรัน:
+#   1. ตรวจสอบว่ามี CLI providers ติดตั้งและ login แล้ว (claude login, gemini)
+#   2. AIHUB_MASTER_KEY=mysecret docker compose -f docker-compose.aihub.yml up --build
+#   3. ทดสอบ: curl http://localhost:4000/health
+#
+# Note:
+#   - container mount host home dir เพื่อให้ CLI providers หา login session เจอ
+#   - CLI binaries ต้องอยู่บน PATH ของ container — built ใน Dockerfile (TBD)
+#   - สำหรับ MVP testing ที่เครื่อง dev ให้รัน proxy โดยตรงโดยไม่ใช้ docker:
+#       uv run python -m litellm.proxy.proxy_server \
+#         --config docker/aihub_config.yaml --host 0.0.0.0 --port 4000
+
+services:
+  aihub:
+    build:
+      context: .
+      args:
+        target: runtime
+    ports:
+      - "4000:4000"
+    environment:
+      - AIHUB_MASTER_KEY=${AIHUB_MASTER_KEY:-changeme-before-production}
+      # API provider keys (optional — เฉพาะ providers ที่จะใช้)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./docker/aihub_config.yaml:/app/aihub_config.yaml:ro
+      # Mount CLI login sessions จาก host
+      - ${HOME}/.claude:/root/.claude:ro
+      - ${HOME}/.config/gemini:/root/.config/gemini:ro
+    command:
+      - "--config=/app/aihub_config.yaml"
+      - "--host=0.0.0.0"
+      - "--port=4000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          python3 -c "import urllib.request;
+          urllib.request.urlopen('http://localhost:4000/health/liveliness')"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

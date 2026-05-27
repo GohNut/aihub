@@ -1,0 +1,45 @@
+# AIHub proxy config
+#
+# expose OpenAI-compatible API ที่ /v1/chat/completions
+# รองรับทั้ง API providers (ใช้ key) และ CLI providers (ใช้ login session)
+
+model_list:
+  # ───────────── API providers (ต้องการ API key) ─────────────
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Ollama (local, ไม่ต้อง key)
+  - model_name: ollama-llama3
+    litellm_params:
+      model: ollama/llama3
+      api_base: http://host.docker.internal:11434
+
+  # ───────────── CLI providers (ใช้ login session) ─────────────
+  # ต้องการ: CLI binary install + login เสร็จแล้วในเครื่อง/container
+  - model_name: cli-claude
+    litellm_params:
+      model: cli-claude/claude
+      # ไม่ต้อง api_key — ใช้ "claude login" session
+
+  - model_name: cli-gemini
+    litellm_params:
+      model: cli-gemini/gemini
+      # ไม่ต้อง api_key — ใช้ "gemini" Google login session
+
+litellm_settings:
+  # register CLI providers ตอน proxy start
+  custom_provider_map:
+    - provider: "cli-claude"
+      custom_handler: litellm.llms.cli_providers.providers.claude.ClaudeCliLLM
+    - provider: "cli-gemini"
+      custom_handler: litellm.llms.cli_providers.providers.gemini.GeminiCliLLM
+
+general_settings:
+  master_key: os.environ/AIHUB_MASTER_KEY
