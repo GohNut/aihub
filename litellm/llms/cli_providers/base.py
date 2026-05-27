@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import shutil
 import subprocess
 from abc import abstractmethod
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Coroutine, Optional, Union
 
 from litellm.llms.custom_llm import CustomLLM, CustomLLMError
 from litellm.utils import ModelResponse
@@ -105,3 +106,36 @@ class CLIProviderLLM(CustomLLM):
         text = self._parse_output(raw_output)
         model_response.choices[0].message.content = text
         return model_response
+
+    async def acompletion(
+        self,
+        model: str,
+        messages: list,
+        api_base: str,
+        custom_prompt_dict: dict,
+        model_response: ModelResponse,
+        print_verbose: Callable,
+        encoding: Any,
+        api_key: Optional[str],
+        logging_obj: Any,
+        optional_params: dict,
+        **kwargs: Any,
+    ) -> Union[ModelResponse, Coroutine[Any, Any, ModelResponse]]:
+        """Async wrapper — รัน subprocess ใน thread executor เพื่อไม่บล็อก event loop"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self.completion(
+                model=model,
+                messages=messages,
+                api_base=api_base,
+                custom_prompt_dict=custom_prompt_dict,
+                model_response=model_response,
+                print_verbose=print_verbose,
+                encoding=encoding,
+                api_key=api_key,
+                logging_obj=logging_obj,
+                optional_params=optional_params,
+                **kwargs,
+            ),
+        )

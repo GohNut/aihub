@@ -35,11 +35,13 @@ model_list:
 
 litellm_settings:
   # register CLI providers ตอน proxy start
+  # หมายเหตุ: LiteLLM โหลด custom_handler จาก path relative ต่อ config file
+  # ดังนั้นต้อง reference instance ใน aihub_handlers.py (อยู่ข้างกัน)
   custom_provider_map:
     - provider: "cli-claude"
-      custom_handler: litellm.llms.cli_providers.providers.claude.ClaudeCliLLM
+      custom_handler: aihub_handlers.claude_handler
     - provider: "cli-gemini"
-      custom_handler: litellm.llms.cli_providers.providers.gemini.GeminiCliLLM
+      custom_handler: aihub_handlers.gemini_handler
 
 general_settings:
   master_key: os.environ/AIHUB_MASTER_KEY

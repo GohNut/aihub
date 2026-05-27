@@ -102,3 +102,23 @@ def test_completion_sets_model_response_content():
             optional_params={},
         )
     assert result.choices[0].message.content == "parsed text"
+
+
+@pytest.mark.asyncio
+async def test_acompletion_calls_completion_in_executor():
+    cli = FakeCLI()
+    model_response = make_model_response()
+    with patch.object(cli, "_run_subprocess", return_value="async parsed text"):
+        result = await cli.acompletion(
+            model="fake/model",
+            messages=[{"role": "user", "content": "hi"}],
+            api_base="",
+            custom_prompt_dict={},
+            model_response=model_response,
+            print_verbose=lambda *a: None,
+            encoding=None,
+            api_key=None,
+            logging_obj=None,
+            optional_params={},
+        )
+    assert result.choices[0].message.content == "async parsed text"
