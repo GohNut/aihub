@@ -5,6 +5,7 @@ import {
   ApiOutlined,
   ApartmentOutlined,
   AppstoreOutlined,
+  CodeOutlined,
   AuditOutlined,
   BankOutlined,
   BarChartOutlined,
@@ -125,6 +126,16 @@ const menuGroups: MenuGroup[] = [
         // Admin Viewer can view models read-only (write actions are
         // hidden inside the page); Playground above stays write-only.
         roles: rolesAllowedToViewWriteScopedPages,
+      },
+      {
+        // AIHub addition — CLI-based coding-agent providers (claude, gemini, …)
+        // managed via the paste-code OAuth flow exposed by `claude setup-token`.
+        // Backend: litellm/llms/cli_providers/web_ui.py
+        // Frontend: src/components/CLIProviders/CLIProvidersPage.tsx
+        key: "cli-providers",
+        page: "cli-providers",
+        label: "CLI Providers",
+        icon: <CodeOutlined />,
       },
       {
         key: "agentic",

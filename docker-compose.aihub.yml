@@ -3,14 +3,19 @@
 # วิธีรัน:
 #   1. ตรวจสอบว่ามี CLI providers ติดตั้งและ login แล้ว (claude login, gemini)
 #   2. AIHUB_MASTER_KEY=mysecret docker compose -f docker-compose.aihub.yml up --build
-#   3. ทดสอบ: curl http://localhost:4000/health
+#   3. เปิด http://localhost:4000/aihub  →  Provider dashboard
+#      เปิด http://localhost:4000/ui     →  LiteLLM Admin UI
+#   4. ทดสอบ: curl http://localhost:4000/health
+#
+# รันแบบไม่ใช้ Docker (dev/local):
+#   LITELLM_WORKER_STARTUP_HOOKS=litellm.llms.cli_providers.web_ui:register_routes \
+#   AIHUB_MASTER_KEY=changeme \
+#   uv run litellm --config docker/aihub_config.yaml --host 0.0.0.0 --port 4000
 #
 # Note:
-#   - container mount host home dir เพื่อให้ CLI providers หา login session เจอ
-#   - CLI binaries ต้องอยู่บน PATH ของ container — built ใน Dockerfile (TBD)
-#   - สำหรับ MVP testing ที่เครื่อง dev ให้รัน proxy โดยตรงโดยไม่ใช้ docker:
-#       uv run python -m litellm.proxy.proxy_server \
-#         --config docker/aihub_config.yaml --host 0.0.0.0 --port 4000
+#   - LITELLM_WORKER_STARTUP_HOOKS เปิด /aihub provider dashboard
+#   - CLI sessions mount จาก host (rw เพื่อให้ login flow บันทึก session ได้)
+#   - สำหรับ login CLI ใน container ต้องมี binary ด้วย (mount หรือ install ใน image)
 
 services:
   aihub:
@@ -22,14 +27,16 @@ services:
       - "4000:4000"
     environment:
       - AIHUB_MASTER_KEY=${AIHUB_MASTER_KEY:-changeme-before-production}
+      # เปิด /aihub provider management UI
+      - LITELLM_WORKER_STARTUP_HOOKS=litellm.llms.cli_providers.web_ui:register_routes
       # API provider keys (optional — เฉพาะ providers ที่จะใช้)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     volumes:
       - ./docker/aihub_config.yaml:/app/aihub_config.yaml:ro
-      # Mount CLI login sessions จาก host
-      - ${HOME}/.claude:/root/.claude:ro
-      - ${HOME}/.config/gemini:/root/.config/gemini:ro
+      # Mount CLI login sessions จาก host (rw — login flow ต้องเขียน session ได้)
+      - ${HOME}/.claude:/root/.claude
+      - ${HOME}/.config/gemini:/root/.config/gemini
     command:
       - "--config=/app/aihub_config.yaml"
       - "--host=0.0.0.0"

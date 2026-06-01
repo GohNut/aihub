@@ -19,6 +19,8 @@ import PoliciesPanel from "@/components/policies";
 import { Team } from "@/components/key_team_helpers/key_list";
 import { MCPServers } from "@/components/mcp_tools";
 import ModelHubTable from "@/components/AIHub/ModelHubTable";
+// AIHub addition — CLI providers tab (see src/components/CLIProviders/)
+import CLIProvidersPage from "@/components/CLIProviders/CLIProvidersPage";
 import Navbar from "@/components/navbar";
 import { Organization, proxyBaseUrl, getInProductNudgesCall } from "@/components/networking";
 import NewUsagePage from "@/components/UsagePage/components/UsagePageView";
@@ -416,6 +418,8 @@ function CreateKeyPageContent() {
                     />
                   ) : page == "llm-playground" ? (
                     <PlaygroundPage />
+                  ) : page == "cli-providers" ? (
+                    <CLIProvidersPage />
                   ) : page == "users" ? (
                     <ViewUserDashboard
                       userID={userID}

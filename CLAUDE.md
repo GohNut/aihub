@@ -1,5 +1,49 @@
 # CLAUDE.md
 
+> **⚡ AIHub Fork — read this first, then the LiteLLM guidance below.**
+
+## What this repo is
+
+This repo is `GohNut/aihub` — a fork of `BerriAI/litellm` being extended into **AIHub: an AI Provider Node** that customers deploy as Docker on their own Ubuntu servers.
+
+**AIHub adds to LiteLLM:**
+- 16 CLI coding-agent providers (claude, gemini, codex, copilot, ...) spawned as subprocesses, reusing the host's CLI login session via mounted volumes
+- A web UI for managing CLI provider login from a remote browser — uses `claude setup-token`-style paste-the-code OAuth flow (works on headless servers; no localhost callback needed)
+- Lightweight Docker Compose for "pull and run" deployment
+
+**Git remotes:**
+- `origin` → `GohNut/aihub` (this fork)
+- `upstream` → `BerriAI/litellm`
+- Working branch: `main`
+
+## Our code lives here (don't confuse with upstream LiteLLM)
+
+| Path | What it is |
+|---|---|
+| `litellm/llms/cli_providers/` | Python: CLI provider implementations (`base.py`, `detector.py`, `providers/*.py`, `registry.py`) |
+| `litellm/llms/cli_providers/web_ui.py` | FastAPI routes + standalone HTML at `/aihub` (provider dashboard, login/submit/logout endpoints) |
+| `docker/aihub_config.yaml` | LiteLLM proxy config with our 5 models |
+| `docker/aihub_handlers.py` | Shim file LiteLLM loads from config-file dir (path-based import quirk) |
+| `docker-compose.aihub.yml` | Lightweight deployment compose (no Postgres) |
+| `tests/litellm/cli_providers/` | Unit tests for CLI provider code |
+| `ui/litellm-dashboard/src/components/CLIProviders/` *(coming)* | React+Antd tab "CLI Providers" in the LiteLLM admin sidebar |
+
+## Naming caveat
+
+LiteLLM already has `ui/litellm-dashboard/src/components/AIHub/` — that is **upstream LiteLLM's Model/Agent/Skill Marketplace** (Claude Code plugin hub), unrelated to our AIHub fork. **Do NOT modify that folder.** Our CLI-provider UI goes in a new sibling folder `CLIProviders/`.
+
+## Sibling repo outside this fork
+
+The parent workspace `litellm-goh/` also contains `open-design/` — an open-source design tool that pioneered the 16-CLI subprocess pattern. It is **read-only reference material** for patterns (detection, auth probe, agent grid UI). **Never import from it, never modify it.** It is not part of AIHub.
+
+## When in doubt
+
+- If you're about to edit a file under `ui/.../components/AIHub/` → STOP, that's upstream's marketplace, not ours
+- If you're about to read `open-design/` → fine for inspiration, never as a dependency
+- If a feature already exists in LiteLLM (caching, routing, virtual keys, admin UI) → use it as-is, don't reimplement
+
+---
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Confidentiality: Customer and Company Names in Code
